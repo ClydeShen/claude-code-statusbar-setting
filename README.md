@@ -1,8 +1,129 @@
 # Claude Code Status Bar Configuration
 
 > 🚀 One-click setup for Claude Code status bar. Copy, paste, done!
+> 
+> **Cross-platform:** Windows | macOS | Linux
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+---
+
+## ⚡ Quick Setup with Claude Code
+
+**Just ask Claude Code to set it up for you:**
+
+### Option 1: Let Claude Do It
+
+Copy and paste this prompt into Claude Code:
+
+```
+/statusline setup
+
+Please help me configure the Claude Code status bar using this repository:
+https://github.com/ClydeShen/claude-code-statusbar-setting
+
+1. Clone the repository
+2. Run the install script
+3. Verify the configuration is working
+4. Test with a sample command
+
+The repository has an automated installer that handles all platforms.
+```
+
+Claude will:
+- ✅ Clone the repository
+- ✅ Run the installer
+- ✅ Update settings.json
+- ✅ Verify it's working
+
+---
+
+### Option 2: One-Command Install
+
+**macOS / Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+iwr -useb https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.ps1 | iex
+```
+
+---
+
+### Option 3: Manual Setup
+
+```bash
+# Clone and install
+git clone https://github.com/ClydeShen/claude-code-statusbar-setting.git ~/.claude-statusbar
+cd ~/.claude-statusbar
+./install.sh
+```
+
+---
+
+## 🖥️ Platform-Specific Setup
+
+### macOS
+
+```bash
+# 1. Install dependencies (if needed)
+brew install jq
+
+# 2. Run installer
+curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.sh | bash
+
+# 3. Restart Claude Code
+```
+
+**Auto-configuration script:**
+```bash
+# Full auto-setup for macOS
+./setup-macos.sh
+```
+
+### Linux
+
+```bash
+# 1. Install dependencies
+sudo apt-get update && sudo apt-get install -y jq  # Debian/Ubuntu
+# OR
+sudo dnf install -y jq  # Fedora/RHEL
+
+# 2. Run installer
+curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.sh | bash
+
+# 3. Restart Claude Code
+```
+
+**Auto-configuration script:**
+```bash
+# Full auto-setup for Linux
+./setup-linux.sh
+```
+
+### Windows
+
+```powershell
+# 1. Install jq (if not installed)
+choco install jq  # Using Chocolatey
+# OR
+winget install jq  # Using winget
+
+# 2. Run installer
+iwr -useb https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.ps1 | iex
+
+# 3. Restart Claude Code
+```
+
+**Auto-configuration script:**
+```powershell
+# Full auto-setup for Windows
+.\setup-windows.ps1
+```
+
+---
 
 ## 🎯 Quick Start (30 seconds)
 
@@ -174,8 +295,12 @@ duration_ms=$(echo "$input" | jq -r '.cost.total_duration_ms')
 ```
 .
 ├── README.md                    # This file
+├── install.sh                   # One-click installer (macOS/Linux)
+├── install.ps1                  # One-click installer (Windows)
+├── setup-macos.sh               # Full auto-setup (macOS)
+├── setup-linux.sh               # Full auto-setup (Linux)
+├── setup-windows.ps1            # Full auto-setup (Windows)
 ├── statusline-command.sh        # Main status bar script
-├── install.sh                   # One-click installer
 ├── examples/
 │   ├── minimal.sh              # Minimal display
 │   ├── git-focused.sh          # Git-focused display
@@ -224,6 +349,25 @@ Ensure your terminal supports ANSI colors. Test with:
 
 ```bash
 echo -e "\033[31mRed\033[0m \033[32mGreen\033[0m \033[34mBlue\033[0m"
+```
+
+### jq not found
+
+**macOS:**
+```bash
+brew install jq
+```
+
+**Linux:**
+```bash
+sudo apt-get install jq  # Debian/Ubuntu
+sudo dnf install jq      # Fedora/RHEL
+```
+
+**Windows:**
+```powershell
+choco install jq  # Chocolatey
+winget install jq # winget
 ```
 
 ---

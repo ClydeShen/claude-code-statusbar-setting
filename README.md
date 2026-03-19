@@ -290,6 +290,29 @@ duration_ms=$(echo "$input" | jq -r '.cost.total_duration_ms')
 
 ---
 
+---
+
+## 🔤 Font Configuration
+
+The status bar uses emoji and special characters. Install required fonts:
+
+**macOS:**
+```bash
+brew install --cask font-noto-color-emoji font-meslo-lg-nerd-font
+```
+
+**Linux:**
+```bash
+sudo apt-get install fonts-noto-color-emoji fonts-firacode  # Debian/Ubuntu
+```
+
+**Windows:**
+```powershell
+# Windows 10+ has built-in emoji support
+```
+
+📚 **Complete font guide:** [FONTS.md](FONTS.md)
+
 ## 📁 Files
 
 ```

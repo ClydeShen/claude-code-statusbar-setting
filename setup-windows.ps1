@@ -80,3 +80,17 @@ Write-Host "   2. The status bar should appear at the bottom"
 Write-Host ""
 Write-Host "🔧 To customize: ~/.claude/statusline-command.sh" -ForegroundColor Gray
 Write-Host "📚 Docs: https://github.com/ClydeShen/claude-code-statusbar-setting" -ForegroundColor Gray
+
+# Step 0: Install fonts for emoji support
+Write-Host "🔤 Checking fonts..." -ForegroundColor Yellow
+# Windows 10+ has built-in emoji support, but we can install Noto Color Emoji for better compatibility
+$FontUrl = "https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf"
+$FontPath = "$env:LOCALAPPDATA\Microsoft\Windows\Fonts\NotoColorEmoji.ttf"
+if (!(Test-Path $FontPath)) {
+    Write-Host "📦 Installing Noto Color Emoji font..." -ForegroundColor Yellow
+    Invoke-WebRequest -Uri $FontUrl -OutFile $FontPath -UseBasicParsing
+    Write-Host "✓ Emoji font installed" -ForegroundColor Green
+    Write-Host "⚠️  Please restart your terminal for fonts to take effect" -ForegroundColor Yellow
+} else {
+    Write-Host "✓ Emoji font already installed" -ForegroundColor Green
+}

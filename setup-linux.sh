@@ -77,3 +77,14 @@ echo "   2. The status bar should appear at the bottom"
 echo ""
 echo "🔧 To customize: ~/.claude/statusline-command.sh"
 echo "📚 Docs: https://github.com/ClydeShen/claude-code-statusbar-setting"
+
+# Step 0: Install fonts for emoji support
+echo "🔤 Checking fonts..."
+if [ "$PKG_MANAGER" = "apt-get" ]; then
+    $PKG_INSTALL fonts-noto-color-emoji  # Debian/Ubuntu
+elif [ "$PKG_MANAGER" = "dnf" ]; then
+    $PKG_INSTALL google-noto-color-emoji-fonts  # Fedora/RHEL
+elif [ "$PKG_MANAGER" = "pacman" ]; then
+    $PKG_INSTALL noto-fonts-emoji  # Arch
+fi
+echo "✓ Emoji fonts installed"

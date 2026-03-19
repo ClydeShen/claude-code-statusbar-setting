@@ -63,3 +63,14 @@ echo "   2. The status bar should appear at the bottom"
 echo ""
 echo "🔧 To customize: ~/.claude/statusline-command.sh"
 echo "📚 Docs: https://github.com/ClydeShen/claude-code-statusbar-setting"
+
+# Step 0: Install fonts for emoji support
+echo "🔤 Checking fonts..."
+if ! system_profiler SPFontsDataType | grep -q "Noto Color Emoji"; then
+    echo "📦 Installing Noto Color Emoji font..."
+    brew tap homebrew/cask-fonts
+    brew install --cask font-noto-color-emoji
+    echo "✓ Emoji font installed"
+else
+    echo "✓ Emoji font already installed"
+fi

@@ -23,11 +23,13 @@ Please help me configure the Claude Code status bar using this repository:
 https://github.com/ClydeShen/claude-code-statusbar-setting
 
 1. Clone the repository
-2. Run the install script
-3. Verify the configuration is working
-4. Test with a sample command
+2. Run: bash install.sh
+3. Restart Claude Code
+4. Verify the statusline appears with colour-coded context usage
 
-The repository has an automated installer that handles all platforms.
+The installer requires Node.js (included with Claude Code) and sets up:
+- A statusline showing model, directory, branch, and accurate context usage
+- A PostToolUse hook that warns when context is running low
 ```
 
 Claude will:
@@ -58,7 +60,8 @@ iwr -useb https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-sett
 # Clone and install
 git clone https://github.com/ClydeShen/claude-code-statusbar-setting.git ~/.claude-statusbar
 cd ~/.claude-statusbar
-./install.sh
+bash install.sh
+# Requires Node.js. Claude Code bundles Node so no extra install needed.
 ```
 
 ---

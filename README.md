@@ -1,7 +1,7 @@
 # Claude Code Status Bar Configuration
 
 > 🚀 One-click setup for Claude Code status bar. Copy, paste, done!
-> 
+>
 > **Cross-platform:** Windows | macOS | Linux
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -17,8 +17,6 @@
 Copy and paste this prompt into Claude Code:
 
 ```
-/statusline setup
-
 Please help me configure the Claude Code status bar using this repository:
 https://github.com/ClydeShen/claude-code-statusbar-setting
 
@@ -33,6 +31,7 @@ The installer requires Node.js (included with Claude Code) and sets up:
 ```
 
 Claude will:
+
 - ✅ Clone the repository
 - ✅ Run the installer
 - ✅ Update settings.json
@@ -43,11 +42,13 @@ Claude will:
 ### Option 2: One-Command Install
 
 **macOS / Linux:**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.sh | bash
 ```
 
 **Windows (PowerShell):**
+
 ```powershell
 iwr -useb https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.ps1 | iex
 ```
@@ -81,6 +82,7 @@ curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-set
 ```
 
 **Auto-configuration script:**
+
 ```bash
 # Full auto-setup for macOS
 ./setup-macos.sh
@@ -101,6 +103,7 @@ curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-set
 ```
 
 **Auto-configuration script:**
+
 ```bash
 # Full auto-setup for Linux
 ./setup-linux.sh
@@ -121,6 +124,7 @@ iwr -useb https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-sett
 ```
 
 **Auto-configuration script:**
+
 ```powershell
 # Full auto-setup for Windows
 .\setup-windows.ps1
@@ -177,13 +181,13 @@ Edit `~/.claude/settings.json`:
 
 ### Display Elements
 
-| Element | Example | Description |
-|---------|---------|-------------|
-| **Model** | `[Opus]` | Current Claude model |
-| **Directory** | `📁 my-project` | Current working directory |
-| **Git Branch** | `🌿 main` | Git branch with link |
-| **Context Bar** | `[████████░░] 80%` | Context usage progress |
-| **Remaining** | `⚡20%` | Remaining context |
+| Element         | Example            | Description               |
+| --------------- | ------------------ | ------------------------- |
+| **Model**       | `[Opus]`           | Current Claude model      |
+| **Directory**   | `📁 my-project`    | Current working directory |
+| **Git Branch**  | `🌿 main`          | Git branch with link      |
+| **Context Bar** | `[████████░░] 80%` | Context usage progress    |
+| **Remaining**   | `⚡20%`            | Remaining context         |
 
 ---
 
@@ -204,25 +208,28 @@ C_SEP="\033[38;5;240m"      # Dark gray - separator
 
 ### Available Colors
 
-| Code | Color | Example |
-|------|-------|---------|
-| `38;5;0-15` | Basic colors | Black, Red, Green, Yellow, Blue, Magenta, Cyan, White |
-| `38;5;16-231` | 216 colors | Full color spectrum |
-| `38;5;232-255` | Grayscale | 24 gray shades |
+| Code           | Color        | Example                                               |
+| -------------- | ------------ | ----------------------------------------------------- |
+| `38;5;0-15`    | Basic colors | Black, Red, Green, Yellow, Blue, Magenta, Cyan, White |
+| `38;5;16-231`  | 216 colors   | Full color spectrum                                   |
+| `38;5;232-255` | Grayscale    | 24 gray shades                                        |
 
 ### Layout Options
 
 **Minimal:**
+
 ```bash
 [Opus] 80%
 ```
 
 **Git-focused:**
+
 ```bash
 [Opus] 📁 project | 🌿 main +2 ~5
 ```
 
 **Full info:**
+
 ```bash
 [Opus] 📁 project | 🌿 main | [████████░░] 80% | 💰 $0.15 | ⏱️ 25m
 ```
@@ -300,16 +307,19 @@ duration_ms=$(echo "$input" | jq -r '.cost.total_duration_ms')
 The status bar uses emoji and special characters. Install required fonts:
 
 **macOS:**
+
 ```bash
 brew install --cask font-noto-color-emoji font-meslo-lg-nerd-font
 ```
 
 **Linux:**
+
 ```bash
 sudo apt-get install fonts-noto-color-emoji fonts-firacode  # Debian/Ubuntu
 ```
 
 **Windows:**
+
 ```powershell
 # Windows 10+ has built-in emoji support
 ```
@@ -343,11 +353,13 @@ sudo apt-get install fonts-noto-color-emoji fonts-firacode  # Debian/Ubuntu
 ### Status bar not showing
 
 1. Check script is executable:
+
    ```bash
    chmod +x ~/.claude/statusline-command.sh
    ```
 
 2. Verify settings:
+
    ```bash
    cat ~/.claude/settings.json | jq '.statusLine'
    ```
@@ -380,17 +392,20 @@ echo -e "\033[31mRed\033[0m \033[32mGreen\033[0m \033[34mBlue\033[0m"
 ### jq not found
 
 **macOS:**
+
 ```bash
 brew install jq
 ```
 
 **Linux:**
+
 ```bash
 sudo apt-get install jq  # Debian/Ubuntu
 sudo dnf install jq      # Fedora/RHEL
 ```
 
 **Windows:**
+
 ```powershell
 choco install jq  # Chocolatey
 winget install jq # winget

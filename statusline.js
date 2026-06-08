@@ -49,6 +49,27 @@ function buildCtxSegment(used) {
   return `\x1b[5;31m💀 [${bar}] ${used}%\x1b[0m`;
 }
 
+function gitRemoteUrl(cwd) {
+  try {
+    const { execFileSync } = require('child_process');
+    const raw = execFileSync(
+      'git',
+      ['-C', cwd, 'remote', 'get-url', 'origin'],
+      { stdio: ['pipe', 'pipe', 'ignore'] },
+    )
+      .toString()
+      .trim();
+    if (!raw) return '';
+    // Convert SSH git@github.com:user/repo.git → https://github.com/user/repo
+    const ssh = raw.match(/^git@([^:]+):(.+?)(\.git)?$/);
+    if (ssh) return `https://${ssh[1]}/${ssh[2]}`;
+    // Strip trailing .git from HTTPS URLs
+    return raw.replace(/\.git$/, '');
+  } catch (e) {
+    return '';
+  }
+}
+
 function gitBranch(cwd) {
   try {
     const { execFileSync } = require('child_process');
@@ -98,8 +119,14 @@ function render(data) {
   const remainSeg = ctx ? `⚡${ctx.remaining.toFixed(0)}%` : '⚡--%';
 
   const branch = gitBranch(cwd);
+  const repoUrl = gitRemoteUrl(cwd);
 
-  let out = `${C_MODEL}[${model}]${C_RESET} ${C_DIR}📁 ${dirname}${C_RESET}`;
+  // OSC 8 hyperlink: \e]8;;URL\e\\TEXT\e]8;;\e\\
+  const dirLabel = repoUrl
+    ? `\x1b]8;;${repoUrl}\x1b\\📁 ${dirname}\x1b]8;;\x1b\\`
+    : `📁 ${dirname}`;
+
+  let out = `${C_MODEL}[${model}]${C_RESET} ${C_DIR}${dirLabel}${C_RESET}`;
   if (branch) out += `${SEP}${C_BRANCH}${branch}${C_RESET}`;
   out += `${SEP}${ctxSeg}${SEP}${C_SEP}${remainSeg}${C_RESET}`;
   return out;

@@ -1,66 +1,87 @@
-#!/bin/bash
-# Claude Code Status Bar Installer
-# One-click install for status bar configuration
-
+#!/usr/bin/env bash
 set -e
 
 echo "🚀 Installing Claude Code Status Bar..."
 echo ""
 
-# Check if ~/.claude exists
+# --- Preflight checks -------------------------------------------------------
+
+if ! command -v node &> /dev/null; then
+  echo "❌ Node.js is required but not found."
+  echo "   Install via: https://nodejs.org  or  brew install node"
+  exit 1
+fi
+
 if [ ! -d ~/.claude ]; then
-    echo "❌ Claude Code not found. Please install Claude Code first."
-    exit 1
+  echo "❌ ~/.claude not found. Please install Claude Code first."
+  exit 1
 fi
 
-# Create backup
-if [ -f ~/.claude/statusline-command.sh ]; then
-    echo "📦 Backing up existing statusline..."
-    cp ~/.claude/statusline-command.sh ~/.claude/statusline-command.sh.backup
-    echo "✓ Backup created: ~/.claude/statusline-command.sh.backup"
-fi
-
-# Copy script
-echo "📋 Copying statusline script..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cp "$SCRIPT_DIR/statusline-command.sh" ~/.claude/statusline-command.sh
-chmod +x ~/.claude/statusline-command.sh
-echo "✓ Script installed"
 
-# Update settings.json
-echo "⚙️  Updating settings.json..."
+# --- Back up old bash script if present ------------------------------------
+
+if [ -f ~/.claude/statusline-command.sh ]; then
+  echo "📦 Backing up old statusline-command.sh..."
+  cp ~/.claude/statusline-command.sh ~/.claude/statusline-command.sh.backup
+  echo "✓ Backup: ~/.claude/statusline-command.sh.backup"
+fi
+
+# --- Copy scripts -----------------------------------------------------------
+
+echo "📋 Installing statusline.js..."
+cp "$SCRIPT_DIR/statusline.js" ~/.claude/statusline.js
+echo "✓ ~/.claude/statusline.js"
+
+echo "📋 Installing context-monitor.js..."
+cp "$SCRIPT_DIR/context-monitor.js" ~/.claude/context-monitor.js
+echo "✓ ~/.claude/context-monitor.js"
+
+# --- Patch settings.json ----------------------------------------------------
 
 SETTINGS_FILE=~/.claude/settings.json
 
-# Create settings.json if it doesn't exist
 if [ ! -f "$SETTINGS_FILE" ]; then
-    echo "{}" > "$SETTINGS_FILE"
+  echo "{}" > "$SETTINGS_FILE"
 fi
 
-# Check if jq is available
-if ! command -v jq &> /dev/null; then
-    echo "❌ jq is required but not installed."
-    echo "   Install with: brew install jq"
-    exit 1
-fi
+echo "⚙️  Updating settings.json..."
 
-# Add statusLine config if not exists
-if ! jq -e '.statusLine' "$SETTINGS_FILE" > /dev/null 2>&1; then
-    jq '.statusLine = {"type": "command", "command": "bash ~/.claude/statusline-command.sh"}' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp"
-    mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
-    echo "✓ settings.json updated"
-else
-    echo "⚠️  statusLine already configured in settings.json"
-    echo "   Current config: $(jq -c '.statusLine' "$SETTINGS_FILE")"
-fi
+node - "$SETTINGS_FILE" <<'EOF'
+const fs   = require('fs');
+const file = process.argv[2];
+
+let cfg = {};
+try { cfg = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) {}
+
+cfg.statusLine = { type: 'command', command: 'node ~/.claude/statusline.js' };
+
+cfg.hooks = cfg.hooks || {};
+cfg.hooks.PostToolUse = cfg.hooks.PostToolUse || [];
+
+const monitorCmd = 'node ~/.claude/context-monitor.js';
+const alreadyRegistered = cfg.hooks.PostToolUse.some(entry =>
+  (entry.hooks || []).some(h => h.command === monitorCmd)
+);
+
+if (!alreadyRegistered) {
+  cfg.hooks.PostToolUse.push({
+    matcher: '',
+    hooks: [{ type: 'command', command: monitorCmd }],
+  });
+}
+
+fs.writeFileSync(file, JSON.stringify(cfg, null, 2));
+console.log('✓ settings.json updated');
+EOF
 
 echo ""
 echo "✅ Installation complete!"
 echo ""
 echo "📝 Next steps:"
 echo "   1. Restart Claude Code"
-echo "   2. The status bar should appear at the bottom"
+echo "   2. The status bar appears at the bottom with colour-coded context usage"
+echo "   3. You will see warnings in Claude's responses when context is low"
 echo ""
-echo "🔧 To customize, edit: ~/.claude/statusline-command.sh"
-echo "📚 Documentation: https://github.com/ClydeShen/claude-code-statusbar-setting"
-echo ""
+echo "🔧 To customize: edit ~/.claude/statusline.js"
+echo "📚 Docs: https://github.com/ClydeShen/claude-code-statusbar-setting"

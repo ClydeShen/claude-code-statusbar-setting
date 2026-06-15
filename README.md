@@ -75,11 +75,12 @@ registers a context-warning hook — any existing `statusline-command.sh` is bac
 Edit `~/.claude/statusline.js`, or set these optional env vars in the `env` block
 of `~/.claude/settings.json`:
 
-| Variable                      | Default | Effect                                                                              |
-| ----------------------------- | ------- | ----------------------------------------------------------------------------------- |
-| `CLAUDE_STATUSLINE_ASCII_BAR` | on (`1`) | ASCII bar `[████░░] 80%`. Set `0` for a compact emoji form `🟢 80%`.                |
-| `CLAUDE_STATUSLINE_GSD`       | off     | Set truthy (`1`/`on`) to add a GSD segment: in-progress todo, or `.planning/STATE.md` state. |
-| `CLAUDE_STATUSLINE_ACCOUNT`   | off     | Set truthy (`1`/`on`) to show the active `claude-swap` / `cswap` account email. Needs claude-swap installed; override its state dir with `CLAUDE_SWAP_DIR`. |
+| Variable                      | Default               | Effect                                                                                       |
+| ----------------------------- | --------------------- | -------------------------------------------------------------------------------------------- |
+| `CLAUDE_STATUSLINE_ASCII_BAR` | `1`                   | `1` = ASCII bar `[████░░] 80%`; `0` = compact emoji form `🟢 80%`.                            |
+| `CLAUDE_STATUSLINE_GSD`       | `0`                   | `1` = add a GSD segment: in-progress todo task, or `.planning/STATE.md` state.               |
+| `CLAUDE_STATUSLINE_ACCOUNT`   | `0`                   | `1` = show the active `claude-swap` / `cswap` account username. Needs claude-swap installed.  |
+| `CLAUDE_SWAP_DIR`             | `~/.claude-swap-backup` | claude-swap state directory read for the account segment (override if yours differs).        |
 
 ### Looks — copy the `env` block you want
 

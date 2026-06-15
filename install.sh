@@ -27,15 +27,26 @@ if [ -f ~/.claude/statusline-command.sh ]; then
   echo "✓ Backup: ~/.claude/statusline-command.sh.backup"
 fi
 
-# --- Copy scripts -----------------------------------------------------------
+# --- Install scripts (copy if local, else download) -------------------------
+# Works both from a clone (files alongside this script) and via
+# `curl ... | bash` (only this script is piped, so fetch the rest from GitHub).
+# Re-running this is also the update path.
 
-echo "📋 Installing statusline.js..."
-cp "$SCRIPT_DIR/statusline.js" ~/.claude/statusline.js
-echo "✓ ~/.claude/statusline.js"
+REPO_RAW="https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/master"
 
-echo "📋 Installing context-monitor.js..."
-cp "$SCRIPT_DIR/context-monitor.js" ~/.claude/context-monitor.js
-echo "✓ ~/.claude/context-monitor.js"
+install_file() {
+  local name="$1"
+  if [ -f "$SCRIPT_DIR/$name" ]; then
+    cp "$SCRIPT_DIR/$name" ~/.claude/"$name"
+  else
+    curl -fsSL "$REPO_RAW/$name" -o ~/.claude/"$name"
+  fi
+  echo "✓ ~/.claude/$name"
+}
+
+echo "📋 Installing scripts..."
+install_file statusline.js
+install_file context-monitor.js
 
 # --- Patch settings.json ----------------------------------------------------
 

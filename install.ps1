@@ -17,7 +17,12 @@ if (-not (Test-Path $ClaudeDir)) {
     exit 1
 }
 
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ScriptDir = if ($MyInvocation.MyCommand.Path) {
+    Split-Path -Parent $MyInvocation.MyCommand.Path
+} else {
+    $null  # piped via `iwr | iex` — no local files, fetch from GitHub
+}
+$RepoRaw = "https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/master"
 
 # --- Back up old bash script if present -------------------------------------
 
@@ -30,13 +35,22 @@ if (Test-Path $OldBash) {
 
 # --- Copy scripts -----------------------------------------------------------
 
-Write-Host "📋 Installing statusline.js..." -ForegroundColor Yellow
-Copy-Item (Join-Path $ScriptDir "statusline.js") (Join-Path $ClaudeDir "statusline.js") -Force
-Write-Host "✓ ~/.claude/statusline.js" -ForegroundColor Green
+# Install scripts: copy if local (clone), else download (piped). Re-running
+# this is also the update path.
+function Install-File($Name) {
+    $dest = Join-Path $ClaudeDir $Name
+    $local = if ($ScriptDir) { Join-Path $ScriptDir $Name } else { $null }
+    if ($local -and (Test-Path $local)) {
+        Copy-Item $local $dest -Force
+    } else {
+        Invoke-WebRequest -UseBasicParsing "$RepoRaw/$Name" -OutFile $dest
+    }
+    Write-Host "✓ $dest" -ForegroundColor Green
+}
 
-Write-Host "📋 Installing context-monitor.js..." -ForegroundColor Yellow
-Copy-Item (Join-Path $ScriptDir "context-monitor.js") (Join-Path $ClaudeDir "context-monitor.js") -Force
-Write-Host "✓ ~/.claude/context-monitor.js" -ForegroundColor Green
+Write-Host "📋 Installing scripts..." -ForegroundColor Yellow
+Install-File "statusline.js"
+Install-File "context-monitor.js"
 
 # --- Patch settings.json (via Node, identical logic to install.sh) ----------
 

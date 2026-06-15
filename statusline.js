@@ -324,7 +324,7 @@ function buildAccountSegment() {
     // Local part only — don't expose the full email/domain in the status bar.
     const name = email.split('@')[0];
     // Same dark gray as the remaining (⚡%) indicator — they share a zone.
-    return `\x1b[38;5;240m👤 ${name}\x1b[0m`;
+    return `\x1b[38;5;240m${name}\x1b[0m`;
   } catch (e) {
     return '';
   }

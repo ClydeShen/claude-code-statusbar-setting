@@ -23,7 +23,7 @@
 | **Branch**      | `main`             | Current git branch                                        |
 | **Context bar** | `[████░░░░░░] 46%` | Context used, colour-coded by level                       |
 | **Remaining**   | `⚡62%`            | Context remaining                                         |
-| **Account**     | `👤 you`           | Active `claude-swap` / `cswap` account, username only (opt-in) |
+| **Account**     | `you`              | Active `claude-swap` / `cswap` account, username only (opt-in) |
 
 The directory is an [OSC 8 hyperlink](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda)
 to the repo's `origin`. Clickable (usually **Ctrl/Cmd+Click**) in Windows
@@ -55,18 +55,35 @@ https://github.com/ClydeShen/claude-code-statusbar-setting
 **macOS / Linux:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/master/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-iwr -useb https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/master/install.ps1 | iex
 ```
 
 Then restart Claude Code. The installer copies `statusline.js` and
 `context-monitor.js` into `~/.claude/`, points `statusLine` at the script, and
 registers a context-warning hook — any existing `statusline-command.sh` is backed up.
+
+### Update
+
+Already installed? **Re-run the same one-liner** — it overwrites the scripts with
+the latest and leaves your `settings.json` and env toggles untouched:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/master/install.sh | bash
+```
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/master/install.ps1 | iex
+```
+
+If you installed from a clone instead, `git pull` then re-run `install.sh`. (And
+if your `statusLine` points directly at a checkout of this repo, `git pull` alone
+is the update.)
 
 ---
 
@@ -114,10 +131,10 @@ Thresholds: 🟢 `<50%` · 🟡 `<65%` · 🟠 `<80%` · 💀 `≥80%`.
 **5. With account** — `"env": { "CLAUDE_STATUSLINE_ACCOUNT": "1" }` (requires `claude-swap` / `cswap`):
 
 ```
-[Opus - high] 📁 my-project | main | [████░░░░░░] 46% | ⚡62% 👤 you
+[Opus - high] 📁 my-project | main | [████░░░░░░] 46% | ⚡62% you
 ```
 
-The account sits in the same zone as the remaining indicator (`⚡62% 👤 you`).
+The account sits in the same zone as the remaining indicator (`⚡62% you`).
 Only the username (the part before `@`) is shown, never the full email.
 
 > The milestone bar uses 5-cell `▰▱` rectangles — deliberately different from the

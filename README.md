@@ -77,7 +77,7 @@ of `~/.claude/settings.json`:
 
 | Variable                      | Default | Effect                                                                              |
 | ----------------------------- | ------- | ----------------------------------------------------------------------------------- |
-| `CLAUDE_STATUSLINE_ASCII_BAR` | on      | ASCII bar `[████░░] 80%`. Set falsy (`0`/`off`) for a compact emoji form `🟢 80%`.   |
+| `CLAUDE_STATUSLINE_ASCII_BAR` | on (`1`) | ASCII bar `[████░░] 80%`. Set `0` for a compact emoji form `🟢 80%`.                |
 | `CLAUDE_STATUSLINE_GSD`       | off     | Set truthy (`1`/`on`) to add a GSD segment: in-progress todo, or `.planning/STATE.md` state. |
 | `CLAUDE_STATUSLINE_ACCOUNT`   | off     | Set truthy (`1`/`on`) to show the active `claude-swap` / `cswap` account email. Needs claude-swap installed; override its state dir with `CLAUDE_SWAP_DIR`. |
 
@@ -89,7 +89,7 @@ of `~/.claude/settings.json`:
 [Opus - high] 📁 my-project | main | [████░░░░░░] 46% | ⚡62%
 ```
 
-**2. Compact emoji bar** — `"env": { "CLAUDE_STATUSLINE_ASCII_BAR": "off" }`
+**2. Compact emoji bar** — `"env": { "CLAUDE_STATUSLINE_ASCII_BAR": "0" }`
 
 ```
 [Opus - high] 📁 my-project | main | 🟢 46% | ⚡62%
@@ -103,7 +103,7 @@ Thresholds: 🟢 `<50%` · 🟡 `<65%` · 🟠 `<80%` · 💀 `≥80%`.
 [Opus - high] 📁 my-project | main | v0.2 Account switcher ▰▰▱▱▱ 33% · Phase 01-discuss executing | [████░░░░░░] 46% | ⚡62%
 ```
 
-**4. Both** — `"env": { "CLAUDE_STATUSLINE_ASCII_BAR": "off", "CLAUDE_STATUSLINE_GSD": "1" }`
+**4. Both** — `"env": { "CLAUDE_STATUSLINE_ASCII_BAR": "0", "CLAUDE_STATUSLINE_GSD": "1" }`
 
 ```
 [Opus - high] 📁 my-project | main | v0.2 Account switcher ▰▰▱▱▱ 33% · Phase 01-discuss executing | 🟢 46% | ⚡62%

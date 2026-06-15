@@ -39,7 +39,29 @@ function writeBridge(session, remaining, used) {
   }
 }
 
+// Context-bar style. Default ON = ASCII progress bar. Explicit falsy switches
+// to a compact emoji + percentage form. `used` may be null (no context data).
+function asciiBarEnabled() {
+  const v = (process.env.CLAUDE_STATUSLINE_ASCII_BAR || '').toLowerCase();
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+}
+
+function ctxEmoji(used) {
+  if (used == null) return '⚪';
+  if (used < 50) return '🟢';
+  if (used < 65) return '🟡';
+  if (used < 80) return '🟠';
+  return '💀';
+}
+
 function buildCtxSegment(used) {
+  if (!asciiBarEnabled()) {
+    // Compact: emoji conveys severity (same thresholds as the bar) + percentage.
+    return `${ctxEmoji(used)} ${used == null ? '--' : used}%`;
+  }
+
+  // ASCII progress bar (default).
+  if (used == null) return `\x1b[38;5;244m[░░░░░░░░░░] --%\x1b[0m`;
   const filled = Math.floor(used / 10);
   const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
 
@@ -94,6 +116,178 @@ function gitBranch(cwd) {
   }
 }
 
+// --- Optional GSD workflow segment ------------------------------------------
+// Opt-in: only built when CLAUDE_STATUSLINE_GSD is truthy. Surfaces the current
+// in-progress todo task, or the GSD milestone/phase state from .planning/STATE.md.
+// Ported (self-contained) from the GSD-edition statusline so this file stays
+// distributable — no machine-specific paths, silent-fail throughout.
+
+function gsdEnabled() {
+  const v = (process.env.CLAUDE_STATUSLINE_GSD || '').toLowerCase();
+  return v === '1' || v === 'true' || v === 'on' || v === 'yes';
+}
+
+/** Walk up from dir looking for .planning/STATE.md; return parsed state or null. */
+function readGsdState(dir) {
+  const home = os.homedir();
+  let current = dir;
+  for (let i = 0; i < 10; i++) {
+    const candidate = path.join(current, '.planning', 'STATE.md');
+    if (fs.existsSync(candidate)) {
+      try {
+        return parseStateMd(fs.readFileSync(candidate, 'utf8'));
+      } catch (e) {
+        return null;
+      }
+    }
+    const parent = path.dirname(current);
+    if (parent === current || current === home) break;
+    current = parent;
+  }
+  return null;
+}
+
+/** Parse STATE.md frontmatter + Phase line. Returns a partial state object. */
+function parseStateMd(content) {
+  const state = {};
+
+  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+  if (fmMatch) {
+    const fm = fmMatch[1];
+    for (const line of fm.split('\n')) {
+      const m = line.match(/^(\w+):\s*(.+)/);
+      if (!m) continue;
+      const [, key, val] = m;
+      const v = val.trim().replace(/^["']|["']$/g, '');
+      if (key === 'status') state.status = v === 'null' ? null : v;
+      if (key === 'milestone') state.milestone = v === 'null' ? null : v;
+      if (key === 'milestone_name') state.milestoneName = v === 'null' ? null : v;
+      if (key === 'active_phase') state.activePhase = (v === 'null' || v === '') ? null : v;
+      if (key === 'next_action') state.nextAction = (v === 'null' || v === '') ? null : v;
+    }
+    const npFlowMatch = fm.match(/^next_phases:\s*\[([^\]]*)\]/m);
+    if (npFlowMatch) {
+      const items = npFlowMatch[1].split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
+      state.nextPhases = items.length > 0 ? items : null;
+    } else {
+      const npBlockMatch = fm.match(/^next_phases:\s*\n((?:[ \t]*-[ \t]*[^\n]+\n?)*)/m);
+      if (npBlockMatch) {
+        const items = npBlockMatch[1]
+          .split('\n')
+          .map(line => line.match(/^[ \t]*-[ \t]*(.+)$/))
+          .filter(Boolean)
+          .map(m => m[1].trim().replace(/^["']|["']$/g, ''))
+          .filter(Boolean);
+        state.nextPhases = items.length > 0 ? items : null;
+      }
+    }
+    const progMatch = fm.match(/^progress:\s*\n((?:[ \t]+\w+:.+\n?)+)/m);
+    if (progMatch) {
+      const cp = progMatch[1].match(/^[ \t]+completed_phases:\s*(\d+)/m);
+      const tp = progMatch[1].match(/^[ \t]+total_phases:\s*(\d+)/m);
+      const pc = progMatch[1].match(/^[ \t]+percent:\s*(\d+)/m);
+      if (cp) state.completedPhases = cp[1];
+      if (tp) state.totalPhases = tp[1];
+      if (pc) state.percent = pc[1];
+    }
+  }
+
+  const phaseMatch = content.match(/^Phase:\s*(\d+)\s+of\s+(\d+)(?:\s+\(([^)]+)\))?/m);
+  if (phaseMatch) {
+    state.phaseNum = phaseMatch[1];
+    state.phaseTotal = phaseMatch[2];
+    state.phaseName = phaseMatch[3] || null;
+  }
+
+  if (!state.status) {
+    const bodyStatus = content.match(/^Status:\s*(.+)/m);
+    if (bodyStatus) {
+      const raw = bodyStatus[1].trim().toLowerCase();
+      if (raw.includes('ready to plan') || raw.includes('planning')) state.status = 'planning';
+      else if (raw.includes('execut')) state.status = 'executing';
+      else if (raw.includes('complet') || raw.includes('archived')) state.status = 'complete';
+    }
+  }
+
+  return state;
+}
+
+/** Render a 10-segment milestone progress bar, or '' when percent is missing. */
+function renderProgressBar(percent) {
+  if (percent == null || isNaN(percent)) return '';
+  const pct = Math.max(0, Math.min(100, parseInt(percent, 10)));
+  const filled = Math.floor(pct / 10);
+  const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
+  return `[${bar}] ${pct}%`;
+}
+
+/** Format GSD state into a display string. */
+function formatGsdState(s) {
+  const parts = [];
+
+  if (s.milestone || s.milestoneName) {
+    const ver = s.milestone || '';
+    const name = (s.milestoneName && s.milestoneName !== 'milestone') ? s.milestoneName : '';
+    const bar = renderProgressBar(s.percent);
+    const pieces = [ver, name, bar].filter(Boolean);
+    if (pieces.length > 0) parts.push(pieces.join(' '));
+  }
+
+  const phasesStr = (s.nextPhases && s.nextPhases.length > 0) ? s.nextPhases.join('/') : null;
+
+  if (s.activePhase) {
+    const stage = s.status || '';
+    parts.push(stage ? `Phase ${s.activePhase} ${stage}` : `Phase ${s.activePhase}`);
+  } else if (s.nextAction && phasesStr) {
+    parts.push(`next ${s.nextAction} ${phasesStr}`);
+  } else if (Number(s.percent) === 100 || (s.completedPhases && s.totalPhases && s.completedPhases === s.totalPhases)) {
+    parts.push('milestone complete');
+  } else {
+    if (s.status) parts.push(s.status);
+    if (s.phaseNum && s.phaseTotal) {
+      const phase = s.phaseName
+        ? `${s.phaseName} (${s.phaseNum}/${s.phaseTotal})`
+        : `ph ${s.phaseNum}/${s.phaseTotal}`;
+      parts.push(phase);
+    }
+  }
+
+  return parts.join(' · ');
+}
+
+/** Read the active session's in-progress todo task (activeForm), or ''. */
+function readCurrentTask(session) {
+  if (!session) return '';
+  const claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
+  const todosDir = path.join(claudeDir, 'todos');
+  if (!fs.existsSync(todosDir)) return '';
+  try {
+    const files = fs.readdirSync(todosDir)
+      .filter(f => f.startsWith(session) && f.includes('-agent-') && f.endsWith('.json'))
+      .map(f => ({ name: f, mtime: fs.statSync(path.join(todosDir, f)).mtime }))
+      .sort((a, b) => b.mtime - a.mtime);
+    if (files.length === 0) return '';
+    const todos = JSON.parse(fs.readFileSync(path.join(todosDir, files[0].name), 'utf8'));
+    const inProgress = todos.find(t => t.status === 'in_progress');
+    return inProgress ? (inProgress.activeForm || '') : '';
+  } catch (e) {
+    return '';
+  }
+}
+
+/**
+ * Build the opt-in GSD middle segment (with its own ANSI styling), or '' when
+ * disabled or no data. Prefers the live todo task, falls back to GSD state.
+ */
+function buildGsdSegment(cwd, session) {
+  if (!gsdEnabled()) return '';
+  const task = readCurrentTask(session);
+  if (task) return `\x1b[1m${task}\x1b[0m`; // bold — active work
+  const gsdStateStr = formatGsdState(readGsdState(cwd) || {});
+  if (gsdStateStr) return `\x1b[2m${gsdStateStr}\x1b[0m`; // dim — workflow state
+  return '';
+}
+
 function render(data) {
   const model = data.model?.display_name || '?';
   const cwd = data.workspace?.current_dir || data.cwd || process.cwd();
@@ -106,28 +300,36 @@ function render(data) {
   const C_DIR = `${ESC}[38;5;214m`;
   const C_BRANCH = `${ESC}[38;5;114m`;
   const C_CTX = `${ESC}[38;5;244m`;
+  const C_EFFORT = `${ESC}[38;5;240m`; // dark gray — reasoning effort, inside the model bracket
   const C_SEP = `${ESC}[38;5;240m`;
   const SEP = `${C_SEP} | ${C_RESET}`;
 
   const ctx = computeUsed(data);
   if (ctx) writeBridge(session, ctx.remaining, ctx.used);
 
-  const ctxSeg = ctx
-    ? buildCtxSegment(ctx.used)
-    : `${C_CTX}[░░░░░░░░░░] --%${C_RESET}`;
+  const ctxSeg = buildCtxSegment(ctx ? ctx.used : null);
 
   const remainSeg = ctx ? `⚡${ctx.remaining.toFixed(0)}%` : '⚡--%';
 
   const branch = gitBranch(cwd);
   const repoUrl = gitRemoteUrl(cwd);
+  const gsdSeg = buildGsdSegment(cwd, session);
 
   // OSC 8 hyperlink: \e]8;;URL\e\\TEXT\e]8;;\e\\
   const dirLabel = repoUrl
     ? `\x1b]8;;${repoUrl}\x1b\\📁 ${dirname}\x1b]8;;\x1b\\`
     : `📁 ${dirname}`;
 
-  let out = `${C_MODEL}[${model}]${C_RESET} ${C_DIR}${dirLabel}${C_RESET}`;
+  // Effort lives inside the model bracket: [Opus - high]. Absent when the
+  // model does not expose effort.level — then it's just [Opus].
+  const effort = data.effort?.level;
+  const modelInner = effort
+    ? `${model} ${C_EFFORT}- ${effort}${C_MODEL}`
+    : model;
+
+  let out = `${C_MODEL}[${modelInner}]${C_RESET} ${C_DIR}${dirLabel}${C_RESET}`;
   if (branch) out += `${SEP}${C_BRANCH}${branch}${C_RESET}`;
+  if (gsdSeg) out += `${SEP}${gsdSeg}`;
   out += `${SEP}${ctxSeg}${SEP}${C_SEP}${remainSeg}${C_RESET}`;
   return out;
 }

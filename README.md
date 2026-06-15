@@ -174,24 +174,62 @@ Edit `~/.claude/settings.json`:
 ## 📊 Preview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  [Opus] 📁 my-project | 🌿 main | [████████░░] 80% | ⚡20%     │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│  [Opus - high] 📁 my-project | main | [████████░░] 80% | ⚡20%         │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Display Elements
 
-| Element         | Example            | Description               |
-| --------------- | ------------------ | ------------------------- |
-| **Model**       | `[Opus]`           | Current Claude model      |
-| **Directory**   | `📁 my-project`    | Current working directory |
-| **Git Branch**  | `🌿 main`          | Git branch with link      |
-| **Context Bar** | `[████████░░] 80%` | Context usage progress    |
-| **Remaining**   | `⚡20%`            | Remaining context         |
+| Element            | Example            | Description                                                |
+| ------------------ | ------------------ | --------------------------------------------------------- |
+| **Model**          | `[Opus]`           | Current Claude model                                       |
+| **Effort**         | `- high`           | Reasoning effort (`low`…`max`), inside the model bracket   |
+| **Directory**      | `📁 my-project`    | Working directory; OSC 8 hyperlink to the repo `origin`    |
+| **Git Branch**     | `main`             | Current git branch                                         |
+| **Context Bar**    | `[████████░░] 80%` | Context usage progress (colour-coded)                      |
+| **Remaining**      | `⚡20%`            | Remaining context                                          |
+
+The **Effort** segment is shown in dark gray and only appears when the current
+model exposes `effort.level` (e.g. Opus); it follows mid-session `/effort`
+changes and is hidden for models that don't support the effort parameter.
+
+The directory is wrapped in an [OSC 8 hyperlink](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda)
+pointing at the repo's `origin` remote. It is clickable in terminals that
+support OSC 8 (Windows Terminal, VS Code, iTerm2, WezTerm, Kitty, GNOME
+Terminal, Konsole) — usually via **Ctrl+Click** (**Cmd+Click** on macOS). It
+degrades to plain text in terminals without OSC 8 support (JetBrains terminal,
+Warp, macOS Terminal.app, legacy Windows conhost).
 
 ---
 
 ## 🎨 Customization
+
+### Environment Toggles
+
+The Node.js statusline (`statusline.js`) reads two optional environment
+variables. Set them in your shell profile or in the `env` block of
+`~/.claude/settings.json`.
+
+| Variable                    | Default       | Effect                                                                                       |
+| --------------------------- | ------------- | -------------------------------------------------------------------------------------------- |
+| `CLAUDE_STATUSLINE_ASCII_BAR` | on (ASCII)  | ASCII progress bar (`[████░░] 80%`). Set to `0`/`false`/`off`/`no` for a compact `🟢 80%` form. |
+| `CLAUDE_STATUSLINE_GSD`       | off         | Set to `1`/`true`/`on`/`yes` to add a GSD segment: the in-progress todo task, or milestone/phase state from `.planning/STATE.md`. |
+
+Example `settings.json`:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "node ~/.claude/statusline.js"
+  },
+  "env": {
+    "CLAUDE_STATUSLINE_ASCII_BAR": "off",
+    "CLAUDE_STATUSLINE_GSD": "1"
+  }
+}
+```
 
 ### Colors
 

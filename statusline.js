@@ -212,13 +212,18 @@ function parseStateMd(content) {
   return state;
 }
 
-/** Render a 10-segment milestone progress bar, or '' when percent is missing. */
+/**
+ * Render a 5-segment milestone progress bar, or '' when percent is missing.
+ * Uses ▰▱ rectangles (not the context bar's █░ blocks) and a shorter 5-cell
+ * width so the milestone bar is visually distinct from the context-usage bar
+ * when both are shown.
+ */
 function renderProgressBar(percent) {
   if (percent == null || isNaN(percent)) return '';
   const pct = Math.max(0, Math.min(100, parseInt(percent, 10)));
-  const filled = Math.floor(pct / 10);
-  const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
-  return `[${bar}] ${pct}%`;
+  const filled = Math.min(5, Math.round(pct / 20));
+  const bar = '▰'.repeat(filled) + '▱'.repeat(5 - filled);
+  return `${bar} ${pct}%`;
 }
 
 /** Format GSD state into a display string. */

@@ -231,6 +231,42 @@ Example `settings.json`:
 }
 ```
 
+### Display Examples
+
+Each configuration and what it renders (context shown at 46% used / 62% remaining):
+
+**Default** — ASCII bar on, GSD off:
+
+```
+[Opus - high] 📁 my-project | main | [████░░░░░░] 46% | ⚡62%
+```
+
+**Compact bar** — `CLAUDE_STATUSLINE_ASCII_BAR=off`:
+
+```
+[Opus - high] 📁 my-project | main | 🟢 46% | ⚡62%
+```
+
+The compact emoji tracks the same thresholds as the bar's colour:
+🟢 `<50%` · 🟡 `<65%` · 🟠 `<80%` · 💀 `≥80%`.
+
+**Model without effort** — e.g. Haiku (no `effort.level`, segment hidden):
+
+```
+[Haiku] 📁 my-project | main | [████░░░░░░] 46% | ⚡62%
+```
+
+**GSD segment** — `CLAUDE_STATUSLINE_GSD=1` (shows the in-progress todo task, or
+falls back to milestone/phase state from `.planning/STATE.md`):
+
+```
+[Opus - high] 📁 my-project | main | v0.2 Account switcher ▰▰▱▱▱ 33% · Phase 01-discuss executing | [████░░░░░░] 46% | ⚡62%
+```
+
+The milestone progress bar uses 5-cell `▰▱` rectangles, deliberately different
+from the context bar's 10-cell `[█░]` blocks, so the two are easy to tell apart
+when both are visible.
+
 ### Colors
 
 Edit color codes in `statusline-command.sh`:

@@ -1,45 +1,55 @@
-# Claude Code Status Bar Configuration
+# Claude Code Status Bar
 
-> 🚀 One-click setup for Claude Code status bar. Copy, paste, done!
+> A Node.js status line for Claude Code: model, reasoning effort, directory,
+> git branch, and an accurate, colour-coded context-usage bar.
 >
-> **Cross-platform:** Windows | macOS | Linux
+> **Cross-platform:** Windows · macOS · Linux · **No dependencies** (uses the Node.js bundled with Claude Code)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## ⚡ Quick Setup with Claude Code
-
-**Just ask Claude Code to set it up for you:**
-
-### Option 1: Let Claude Do It
-
-Copy and paste this prompt into Claude Code:
+## Preview
 
 ```
-Please help me configure the Claude Code status bar using this repository:
-https://github.com/ClydeShen/claude-code-statusbar-setting
-
-1. Clone the repository
-2. Run: bash install.sh
-3. Restart Claude Code
-4. Verify the statusline appears with colour-coded context usage
-
-The installer requires Node.js (included with Claude Code) and sets up:
-- A statusline showing model, directory, branch, and accurate context usage
-- A PostToolUse hook that warns when context is running low
+[Opus - high] 📁 my-project | main | [████░░░░░░] 46% | ⚡62%
 ```
 
-Claude will:
+| Segment         | Example            | What it shows                                              |
+| --------------- | ------------------ | --------------------------------------------------------- |
+| **Model**       | `[Opus]`           | Current model                                             |
+| **Effort**      | `- high`           | Reasoning effort (`low`…`max`); auto-hidden if unsupported |
+| **Directory**   | `📁 my-project`    | Working directory — a clickable link to the repo          |
+| **Branch**      | `main`             | Current git branch                                        |
+| **Context bar** | `[████░░░░░░] 46%` | Context used, colour-coded by level                       |
+| **Remaining**   | `⚡62%`            | Context remaining                                         |
 
-- ✅ Clone the repository
-- ✅ Run the installer
-- ✅ Update settings.json
-- ✅ Verify it's working
+The directory is an [OSC 8 hyperlink](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda)
+to the repo's `origin`. Clickable (usually **Ctrl/Cmd+Click**) in Windows
+Terminal, VS Code, iTerm2, WezTerm, Kitty, GNOME Terminal, and Konsole; it shows
+as plain text in terminals without OSC 8 support (JetBrains, Warp, Terminal.app).
 
 ---
 
-### Option 2: One-Command Install
+## Install
+
+### Let Claude install it (recommended)
+
+Paste this prompt into Claude Code — it clones, installs, and verifies for you:
+
+```
+Install the Claude Code status bar from
+https://github.com/ClydeShen/claude-code-statusbar-setting
+
+1. Clone the repo to a temp location.
+2. Run install.sh (use install.ps1 on Windows).
+3. The installer copies statusline.js + context-monitor.js into ~/.claude/,
+   sets statusLine in settings.json, and registers a PostToolUse context-warning hook.
+4. Confirm the statusline renders with a colour-coded context bar, then tell me
+   to restart Claude Code.
+```
+
+### Or run the installer yourself
 
 **macOS / Linux:**
 
@@ -53,494 +63,84 @@ curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-set
 iwr -useb https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.ps1 | iex
 ```
 
----
-
-### Option 3: Manual Setup
-
-```bash
-# Clone and install
-git clone https://github.com/ClydeShen/claude-code-statusbar-setting.git ~/.claude-statusbar
-cd ~/.claude-statusbar
-bash install.sh
-# Requires Node.js. Claude Code bundles Node so no extra install needed.
-```
+Then restart Claude Code. The installer copies `statusline.js` and
+`context-monitor.js` into `~/.claude/`, points `statusLine` at the script, and
+registers a context-warning hook — any existing `statusline-command.sh` is backed up.
 
 ---
 
-## 🖥️ Platform-Specific Setup
+## Customize
 
-### macOS
+Edit `~/.claude/statusline.js`, or set these optional env vars in the `env` block
+of `~/.claude/settings.json`:
 
-```bash
-# 1. Install dependencies (if needed)
-brew install jq
+| Variable                      | Default | Effect                                                                              |
+| ----------------------------- | ------- | ----------------------------------------------------------------------------------- |
+| `CLAUDE_STATUSLINE_ASCII_BAR` | on      | ASCII bar `[████░░] 80%`. Set falsy (`0`/`off`) for a compact emoji form `🟢 80%`.   |
+| `CLAUDE_STATUSLINE_GSD`       | off     | Set truthy (`1`/`on`) to add a GSD segment: in-progress todo, or `.planning/STATE.md` state. |
 
-# 2. Run installer
-curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.sh | bash
+### Looks — copy the `env` block you want
 
-# 3. Restart Claude Code
-```
-
-**Auto-configuration script:**
-
-```bash
-# Full auto-setup for macOS
-./setup-macos.sh
-```
-
-### Linux
-
-```bash
-# 1. Install dependencies
-sudo apt-get update && sudo apt-get install -y jq  # Debian/Ubuntu
-# OR
-sudo dnf install -y jq  # Fedora/RHEL
-
-# 2. Run installer
-curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.sh | bash
-
-# 3. Restart Claude Code
-```
-
-**Auto-configuration script:**
-
-```bash
-# Full auto-setup for Linux
-./setup-linux.sh
-```
-
-### Windows
-
-```powershell
-# 1. Install jq (if not installed)
-choco install jq  # Using Chocolatey
-# OR
-winget install jq  # Using winget
-
-# 2. Run installer
-iwr -useb https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/install.ps1 | iex
-
-# 3. Restart Claude Code
-```
-
-**Auto-configuration script:**
-
-```powershell
-# Full auto-setup for Windows
-.\setup-windows.ps1
-```
-
----
-
-## 🎯 Quick Start (30 seconds)
-
-### Option 1: Automatic Install (Recommended)
-
-```bash
-# Clone and install
-git clone https://github.com/ClydeShen/claude-code-statusbar-setting.git ~/.claude-statusbar
-cd ~/.claude-statusbar
-./install.sh
-
-# Restart Claude Code
-```
-
-### Option 2: Manual Setup
-
-**Step 1:** Copy the script
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ClydeShen/claude-code-statusbar-setting/main/statusline-command.sh -o ~/.claude/statusline-command.sh
-chmod +x ~/.claude/statusline-command.sh
-```
-
-**Step 2:** Add to settings
-
-Edit `~/.claude/settings.json`:
-
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/statusline-command.sh"
-  }
-}
-```
-
-**Step 3:** Restart Claude Code
-
----
-
-## 📊 Preview
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│  [Opus - high] 📁 my-project | main | [████████░░] 80% | ⚡20%         │
-└──────────────────────────────────────────────────────────────────────┘
-```
-
-### Display Elements
-
-| Element            | Example            | Description                                                |
-| ------------------ | ------------------ | --------------------------------------------------------- |
-| **Model**          | `[Opus]`           | Current Claude model                                       |
-| **Effort**         | `- high`           | Reasoning effort (`low`…`max`), inside the model bracket   |
-| **Directory**      | `📁 my-project`    | Working directory; OSC 8 hyperlink to the repo `origin`    |
-| **Git Branch**     | `main`             | Current git branch                                         |
-| **Context Bar**    | `[████████░░] 80%` | Context usage progress (colour-coded)                      |
-| **Remaining**      | `⚡20%`            | Remaining context                                          |
-
-The **Effort** segment is shown in dark gray and only appears when the current
-model exposes `effort.level` (e.g. Opus); it follows mid-session `/effort`
-changes and is hidden for models that don't support the effort parameter.
-
-The directory is wrapped in an [OSC 8 hyperlink](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda)
-pointing at the repo's `origin` remote. It is clickable in terminals that
-support OSC 8 (Windows Terminal, VS Code, iTerm2, WezTerm, Kitty, GNOME
-Terminal, Konsole) — usually via **Ctrl+Click** (**Cmd+Click** on macOS). It
-degrades to plain text in terminals without OSC 8 support (JetBrains terminal,
-Warp, macOS Terminal.app, legacy Windows conhost).
-
----
-
-## 🎨 Customization
-
-### Environment Toggles
-
-The Node.js statusline (`statusline.js`) reads two optional environment
-variables. Set them in your shell profile or in the `env` block of
-`~/.claude/settings.json`.
-
-| Variable                    | Default       | Effect                                                                                       |
-| --------------------------- | ------------- | -------------------------------------------------------------------------------------------- |
-| `CLAUDE_STATUSLINE_ASCII_BAR` | on (ASCII)  | ASCII progress bar (`[████░░] 80%`). Set to `0`/`false`/`off`/`no` for a compact `🟢 80%` form. |
-| `CLAUDE_STATUSLINE_GSD`       | off         | Set to `1`/`true`/`on`/`yes` to add a GSD segment: the in-progress todo task, or milestone/phase state from `.planning/STATE.md`. |
-
-Example `settings.json`:
-
-```json
-{
-  "statusLine": {
-    "type": "command",
-    "command": "node ~/.claude/statusline.js"
-  },
-  "env": {
-    "CLAUDE_STATUSLINE_ASCII_BAR": "off",
-    "CLAUDE_STATUSLINE_GSD": "1"
-  }
-}
-```
-
-### Display Examples
-
-Each configuration and what it renders (context shown at 46% used / 62% remaining):
-
-**Default** — ASCII bar on, GSD off:
+**1. Default** (no env needed):
 
 ```
 [Opus - high] 📁 my-project | main | [████░░░░░░] 46% | ⚡62%
 ```
 
-**Compact bar** — `CLAUDE_STATUSLINE_ASCII_BAR=off`:
+**2. Compact emoji bar** — `"env": { "CLAUDE_STATUSLINE_ASCII_BAR": "off" }`
 
 ```
 [Opus - high] 📁 my-project | main | 🟢 46% | ⚡62%
 ```
 
-The compact emoji tracks the same thresholds as the bar's colour:
-🟢 `<50%` · 🟡 `<65%` · 🟠 `<80%` · 💀 `≥80%`.
+Thresholds: 🟢 `<50%` · 🟡 `<65%` · 🟠 `<80%` · 💀 `≥80%`.
 
-**Model without effort** — e.g. Haiku (no `effort.level`, segment hidden):
-
-```
-[Haiku] 📁 my-project | main | [████░░░░░░] 46% | ⚡62%
-```
-
-**GSD segment** — `CLAUDE_STATUSLINE_GSD=1` (shows the in-progress todo task, or
-falls back to milestone/phase state from `.planning/STATE.md`):
+**3. GSD segment** — `"env": { "CLAUDE_STATUSLINE_GSD": "1" }`
 
 ```
 [Opus - high] 📁 my-project | main | v0.2 Account switcher ▰▰▱▱▱ 33% · Phase 01-discuss executing | [████░░░░░░] 46% | ⚡62%
 ```
 
-The milestone progress bar uses 5-cell `▰▱` rectangles, deliberately different
-from the context bar's 10-cell `[█░]` blocks, so the two are easy to tell apart
-when both are visible.
+**4. Both** — `"env": { "CLAUDE_STATUSLINE_ASCII_BAR": "off", "CLAUDE_STATUSLINE_GSD": "1" }`
 
-### Colors
-
-Edit color codes in `statusline-command.sh`:
-
-```bash
-C_MODEL="\033[38;5;111m"    # Blue - model name
-C_DIR="\033[38;5;214m"      # Orange - directory
-C_BRANCH="\033[38;5;114m"   # Green - git branch
-C_CTX="\033[38;5;244m"      # Gray - context bar
-C_SESSION="\033[38;5;220m"  # Yellow - remaining
-C_SEP="\033[38;5;240m"      # Dark gray - separator
+```
+[Opus - high] 📁 my-project | main | v0.2 Account switcher ▰▰▱▱▱ 33% · Phase 01-discuss executing | 🟢 46% | ⚡62%
 ```
 
-### Available Colors
+> The milestone bar uses 5-cell `▰▱` rectangles — deliberately different from the
+> context bar's 10-cell `[█░]` blocks — so the two never get confused.
 
-| Code           | Color        | Example                                               |
-| -------------- | ------------ | ----------------------------------------------------- |
-| `38;5;0-15`    | Basic colors | Black, Red, Green, Yellow, Blue, Magenta, Cyan, White |
-| `38;5;16-231`  | 216 colors   | Full color spectrum                                   |
-| `38;5;232-255` | Grayscale    | 24 gray shades                                        |
+### Colours
 
-### Layout Options
+Each segment's colour is a 256-palette code set near the top of `render()` in
+`statusline.js`. Change the number in `\x1b[38;5;<N>m` ([colour chart](https://www.ditig.com/256-colors-cheat-sheet)).
 
-**Minimal:**
-
-```bash
-[Opus] 80%
-```
-
-**Git-focused:**
-
-```bash
-[Opus] 📁 project | 🌿 main +2 ~5
-```
-
-**Full info:**
-
-```bash
-[Opus] 📁 project | 🌿 main | [████████░░] 80% | 💰 $0.15 | ⏱️ 25m
-```
+| Segment            | Colour     | Code           |
+| ------------------ | ---------- | -------------- |
+| Model + brackets   | Blue       | `111`          |
+| Effort             | Dark gray  | `240`          |
+| Directory          | Orange     | `214`          |
+| Branch             | Green      | `114`          |
+| Remaining / `\|`   | Dark gray  | `240`          |
+| Context bar        | Green → Yellow → Orange → Red by usage | `32` / `33` / `208` / `31` |
 
 ---
 
-## ⚙️ Configuration Options
+## Troubleshooting
 
-### Available Data Fields
+- **Status bar not showing** — confirm the config: `cat ~/.claude/settings.json | jq .statusLine` should point at `node ~/.claude/statusline.js`. Restart Claude Code after install.
+- **Shows `--%`** — context fields are empty until the first API response; it fills in after the first message.
+- **Link not clickable / colours missing** — your terminal lacks OSC 8 or ANSI support; see the terminal list under [Preview](#preview).
 
-All fields available from Claude Code:
-
-```json
-{
-  "model": {
-    "id": "claude-sonnet-4-20250514",
-    "display_name": "Sonnet"
-  },
-  "cwd": "/path/to/project",
-  "workspace": {
-    "current_dir": "/path/to/project",
-    "project_dir": "/path/to/project"
-  },
-  "cost": {
-    "total_cost_usd": 0.15,
-    "total_duration_ms": 150000,
-    "total_lines_added": 100,
-    "total_lines_removed": 50
-  },
-  "context_window": {
-    "total_input_tokens": 150000,
-    "total_output_tokens": 50000,
-    "context_window_size": 200000,
-    "used_percentage": 75,
-    "remaining_percentage": 25,
-    "current_usage": {
-      "input_tokens": 10000,
-      "output_tokens": 5000
-    }
-  },
-  "session_id": "abc123",
-  "transcript_path": "/path/to/transcript",
-  "version": "1.0.0"
-}
-```
-
-### Extract Fields in Script
-
-```bash
-# Model
-model=$(echo "$input" | jq -r '.model.display_name')
-
-# Directory
-dir=$(echo "$input" | jq -r '.cwd')
-
-# Git branch
-branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-
-# Context usage
-used_pct=$(echo "$input" | jq -r '.context_window.used_percentage')
-
-# Cost
-cost=$(echo "$input" | jq -r '.cost.total_cost_usd')
-
-# Duration
-duration_ms=$(echo "$input" | jq -r '.cost.total_duration_ms')
-```
+Fonts (emoji + box-drawing glyphs): see [FONTS.md](FONTS.md).
 
 ---
 
----
+## Resources
 
-## 🔤 Font Configuration
+- [Claude Code status line docs](https://code.claude.com/docs/en/statusline)
+- [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code)
 
-The status bar uses emoji and special characters. Install required fonts:
+## License
 
-**macOS:**
-
-```bash
-brew install --cask font-noto-color-emoji font-meslo-lg-nerd-font
-```
-
-**Linux:**
-
-```bash
-sudo apt-get install fonts-noto-color-emoji fonts-firacode  # Debian/Ubuntu
-```
-
-**Windows:**
-
-```powershell
-# Windows 10+ has built-in emoji support
-```
-
-📚 **Complete font guide:** [FONTS.md](FONTS.md)
-
-## 📁 Files
-
-```
-.
-├── README.md                    # This file
-├── install.sh                   # One-click installer (macOS/Linux)
-├── install.ps1                  # One-click installer (Windows)
-├── setup-macos.sh               # Full auto-setup (macOS)
-├── setup-linux.sh               # Full auto-setup (Linux)
-├── setup-windows.ps1            # Full auto-setup (Windows)
-├── statusline-command.sh        # Main status bar script
-├── examples/
-│   ├── minimal.sh              # Minimal display
-│   ├── git-focused.sh          # Git-focused display
-│   └── full-info.sh            # Full information display
-└── templates/
-    ├── basic.sh                # Basic template
-    └── advanced.sh             # Advanced template
-```
-
----
-
-## 🔧 Troubleshooting
-
-### Status bar not showing
-
-1. Check script is executable:
-
-   ```bash
-   chmod +x ~/.claude/statusline-command.sh
-   ```
-
-2. Verify settings:
-
-   ```bash
-   cat ~/.claude/settings.json | jq '.statusLine'
-   ```
-
-3. Test script:
-   ```bash
-   echo '{"model":{"display_name":"Test"}}' | bash ~/.claude/statusline-command.sh
-   ```
-
-### Shows `--` instead of values
-
-Fields may be null before first API response. Add fallbacks:
-
-```bash
-# Instead of:
-used_pct=$(echo "$input" | jq -r '.context_window.used_percentage')
-
-# Use:
-used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // 0')
-```
-
-### Colors not working
-
-Ensure your terminal supports ANSI colors. Test with:
-
-```bash
-echo -e "\033[31mRed\033[0m \033[32mGreen\033[0m \033[34mBlue\033[0m"
-```
-
-### jq not found
-
-**macOS:**
-
-```bash
-brew install jq
-```
-
-**Linux:**
-
-```bash
-sudo apt-get install jq  # Debian/Ubuntu
-sudo dnf install jq      # Fedora/RHEL
-```
-
-**Windows:**
-
-```powershell
-choco install jq  # Chocolatey
-winget install jq # winget
-```
-
----
-
-## 🚀 Advanced Examples
-
-### 1. Cost Tracking
-
-```bash
-#!/bin/bash
-input=$(cat)
-cost=$(echo "$input" | jq -r '.cost.total_cost_usd // 0')
-printf "💰 $%.2f" "$cost"
-```
-
-### 2. Session Duration
-
-```bash
-#!/bin/bash
-input=$(cat)
-duration_ms=$(echo "$input" | jq -r '.cost.total_duration_ms // 0')
-mins=$((duration_ms / 60000))
-secs=$(((duration_ms % 60000) / 1000))
-printf "⏱️ %dm %ds" "$mins" "$secs"
-```
-
-### 3. Git Status
-
-```bash
-#!/bin/bash
-input=$(cat)
-dir=$(echo "$input" | jq -r '.cwd')
-staged=$(git -C "$dir" diff --cached --numstat 2>/dev/null | wc -l | tr -d ' ')
-modified=$(git -C "$dir" diff --numstat 2>/dev/null | wc -l | tr -d ' ')
-printf "📝 +%s ~%s" "$staged" "$modified"
-```
-
-### 4. Multi-line Display
-
-```bash
-#!/bin/bash
-input=$(cat)
-model=$(echo "$input" | jq -r '.model.display_name')
-dir=$(echo "$input" | jq -r '.cwd')
-used_pct=$(echo "$input" | jq -r '.context_window.used_percentage // 0')
-
-echo "[$model] 📁 ${dir##*/}"
-echo "[████████░░] ${used_pct}%"
-```
-
----
-
-## 📚 Resources
-
-- [Official Claude Code Docs](https://code.claude.com/docs/en/statusline)
-- [Community Examples](https://github.com/topics/claude-code-statusline)
-- [ANSI Color Codes](https://en.wikipedia.org/wiki/ANSI_escape_code)
-
-## 📄 License
-
-MIT License - feel free to use and modify!
+MIT — use and modify freely.

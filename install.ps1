@@ -1,61 +1,92 @@
-# Windows PowerShell Installer for Claude Code Status Bar
+# Windows PowerShell Installer for Claude Code Status Bar (Node.js)
 
 Write-Host "🚀 Installing Claude Code Status Bar..." -ForegroundColor Cyan
 Write-Host ""
 
-# Check if ~/.claude exists
-$ClaudeDir = Join-Path $env:USERPROFILE ".claude"
-if (!(Test-Path $ClaudeDir)) {
-    Write-Host "❌ Claude Code not found. Please install Claude Code first." -ForegroundColor Red
-    Write-Host "   npm install -g @anthropic-ai/claude-code" -ForegroundColor Yellow
+# --- Preflight checks -------------------------------------------------------
+
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
+    Write-Host "❌ Node.js is required but not found." -ForegroundColor Red
+    Write-Host "   Install via https://nodejs.org" -ForegroundColor Yellow
     exit 1
 }
 
-# Create backup
-$StatuslineScript = Join-Path $ClaudeDir "statusline-command.sh"
-if (Test-Path $StatuslineScript) {
-    Write-Host "📦 Backing up existing statusline..." -ForegroundColor Yellow
-    Copy-Item $StatuslineScript "$StatuslineScript.backup"
-    Write-Host "✓ Backup created: $StatuslineScript.backup" -ForegroundColor Green
+$ClaudeDir = Join-Path $env:USERPROFILE ".claude"
+if (-not (Test-Path $ClaudeDir)) {
+    Write-Host "❌ ~/.claude not found. Please install Claude Code first." -ForegroundColor Red
+    exit 1
 }
 
-# Copy script
-Write-Host "📋 Copying statusline script..." -ForegroundColor Yellow
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-Copy-Item "$ScriptDir\statusline-command.sh" $StatuslineScript
-Write-Host "✓ Script installed" -ForegroundColor Green
 
-# Update settings.json
-Write-Host "⚙️  Updating settings.json..." -ForegroundColor Yellow
+# --- Back up old bash script if present -------------------------------------
+
+$OldBash = Join-Path $ClaudeDir "statusline-command.sh"
+if (Test-Path $OldBash) {
+    Write-Host "📦 Backing up old statusline-command.sh..." -ForegroundColor Yellow
+    Copy-Item $OldBash "$OldBash.backup" -Force
+    Write-Host "✓ Backup: $OldBash.backup" -ForegroundColor Green
+}
+
+# --- Copy scripts -----------------------------------------------------------
+
+Write-Host "📋 Installing statusline.js..." -ForegroundColor Yellow
+Copy-Item (Join-Path $ScriptDir "statusline.js") (Join-Path $ClaudeDir "statusline.js") -Force
+Write-Host "✓ ~/.claude/statusline.js" -ForegroundColor Green
+
+Write-Host "📋 Installing context-monitor.js..." -ForegroundColor Yellow
+Copy-Item (Join-Path $ScriptDir "context-monitor.js") (Join-Path $ClaudeDir "context-monitor.js") -Force
+Write-Host "✓ ~/.claude/context-monitor.js" -ForegroundColor Green
+
+# --- Patch settings.json (via Node, identical logic to install.sh) ----------
+
 $SettingsFile = Join-Path $ClaudeDir "settings.json"
-
-# Create settings.json if it doesn't exist
-if (!(Test-Path $SettingsFile)) {
-    @{} | ConvertTo-Json | Out-File -FilePath $SettingsFile -Encoding utf8
+if (-not (Test-Path $SettingsFile)) {
+    [System.IO.File]::WriteAllText($SettingsFile, "{}")
 }
 
-# Load settings
-$Settings = Get-Content $SettingsFile -Raw | ConvertFrom-Json
+Write-Host "⚙️  Updating settings.json..." -ForegroundColor Yellow
 
-# Add statusLine config if not exists
-if ($Settings.statusLine) {
-    Write-Host "⚠️  statusLine already configured in settings.json" -ForegroundColor Yellow
-    Write-Host "   Current config: $($Settings.statusLine | ConvertTo-Json -Compress)" -ForegroundColor Gray
-} else {
-    $Settings.statusLine = @{
-        type = "command"
-        command = "bash ~/.claude/statusline-command.sh"
-    }
-    $Settings | ConvertTo-Json -Depth 10 | Out-File -FilePath $SettingsFile -Encoding utf8
-    Write-Host "✓ settings.json updated" -ForegroundColor Green
+$Patch = @'
+const fs   = require('fs');
+const file = process.argv[2];
+
+let cfg = {};
+try { cfg = JSON.parse(fs.readFileSync(file, 'utf8')); } catch (e) {}
+
+cfg.statusLine = { type: 'command', command: 'node ~/.claude/statusline.js' };
+
+cfg.hooks = cfg.hooks || {};
+cfg.hooks.PostToolUse = cfg.hooks.PostToolUse || [];
+
+const monitorCmd = 'node ~/.claude/context-monitor.js';
+const alreadyRegistered = cfg.hooks.PostToolUse.some(entry =>
+  (entry.hooks || []).some(h => h.command === monitorCmd)
+);
+
+if (!alreadyRegistered) {
+  cfg.hooks.PostToolUse.push({
+    matcher: '',
+    hooks: [{ type: 'command', command: monitorCmd }],
+  });
 }
+
+fs.writeFileSync(file, JSON.stringify(cfg, null, 2));
+console.log('✓ settings.json updated');
+'@
+
+$TmpPatch = Join-Path $env:TEMP "ccsb-patch-$PID.js"
+[System.IO.File]::WriteAllText($TmpPatch, $Patch)
+node $TmpPatch $SettingsFile
+Remove-Item $TmpPatch -Force
 
 Write-Host ""
 Write-Host "✅ Installation complete!" -ForegroundColor Green
 Write-Host ""
 Write-Host "📝 Next steps:" -ForegroundColor Yellow
 Write-Host "   1. Restart Claude Code"
-Write-Host "   2. The status bar should appear at the bottom"
+Write-Host "   2. The status bar appears at the bottom with colour-coded context usage"
+Write-Host "   3. You will see warnings in Claude's responses when context is low"
 Write-Host ""
-Write-Host "🔧 To customize: ~/.claude/statusline-command.sh" -ForegroundColor Gray
-Write-Host "📚 Documentation: https://github.com/ClydeShen/claude-code-statusbar-setting" -ForegroundColor Gray
+Write-Host "🔧 To customize: edit ~/.claude/statusline.js" -ForegroundColor Gray
+Write-Host "📚 Docs: https://github.com/ClydeShen/claude-code-statusbar-setting" -ForegroundColor Gray

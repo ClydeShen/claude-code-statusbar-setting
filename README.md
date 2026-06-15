@@ -77,6 +77,7 @@ of `~/.claude/settings.json`:
 
 | Variable                      | Default               | Effect                                                                                       |
 | ----------------------------- | --------------------- | -------------------------------------------------------------------------------------------- |
+| `CLAUDE_STATUSLINE_MODEL`     | `1`                   | `1` = show the model segment `[Opus 4.8 - medium]`; `0` = hide it (effort hides with it).     |
 | `CLAUDE_STATUSLINE_ASCII_BAR` | `1`                   | `1` = ASCII bar `[████░░] 80%`; `0` = compact emoji form `🟢 80%`.                            |
 | `CLAUDE_STATUSLINE_GSD`       | `0`                   | `1` = add a GSD segment: in-progress todo task, or `.planning/STATE.md` state.               |
 | `CLAUDE_STATUSLINE_ACCOUNT`   | `0`                   | `1` = show the active `claude-swap` / `cswap` account username. Needs claude-swap installed.  |

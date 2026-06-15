@@ -46,6 +46,13 @@ function asciiBarEnabled() {
   return !(v === '0' || v === 'false' || v === 'off' || v === 'no');
 }
 
+// Model segment (e.g. [Opus 4.8 - medium]). Default ON; set falsy to hide it
+// — the effort lives inside the bracket, so it's hidden with the model.
+function modelEnabled() {
+  const v = (process.env.CLAUDE_STATUSLINE_MODEL || '').toLowerCase();
+  return !(v === '0' || v === 'false' || v === 'off' || v === 'no');
+}
+
 function ctxEmoji(used) {
   if (used == null) return '⚪';
   if (used < 50) return '🟢';
@@ -364,7 +371,11 @@ function render(data) {
 
   const acctSeg = buildAccountSegment();
 
-  let out = `${C_MODEL}[${modelInner}]${C_RESET} ${C_DIR}${dirLabel}${C_RESET}`;
+  const modelLabel = modelEnabled()
+    ? `${C_MODEL}[${modelInner}]${C_RESET} `
+    : '';
+
+  let out = `${modelLabel}${C_DIR}${dirLabel}${C_RESET}`;
   if (branch) out += `${SEP}${C_BRANCH}${branch}${C_RESET}`;
   if (gsdSeg) out += `${SEP}${gsdSeg}`;
   // Remaining + account share the same right-hand zone (space-separated, no

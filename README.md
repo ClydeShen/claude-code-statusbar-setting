@@ -23,6 +23,7 @@
 | **Branch**      | `main`             | Current git branch                                        |
 | **Context bar** | `[████░░░░░░] 46%` | Context used, colour-coded by level                       |
 | **Remaining**   | `⚡62%`            | Context remaining                                         |
+| **Account**     | `👤 you`           | Active `claude-swap` / `cswap` account, username only (opt-in) |
 
 The directory is an [OSC 8 hyperlink](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda)
 to the repo's `origin`. Clickable (usually **Ctrl/Cmd+Click**) in Windows
@@ -78,6 +79,7 @@ of `~/.claude/settings.json`:
 | ----------------------------- | ------- | ----------------------------------------------------------------------------------- |
 | `CLAUDE_STATUSLINE_ASCII_BAR` | on      | ASCII bar `[████░░] 80%`. Set falsy (`0`/`off`) for a compact emoji form `🟢 80%`.   |
 | `CLAUDE_STATUSLINE_GSD`       | off     | Set truthy (`1`/`on`) to add a GSD segment: in-progress todo, or `.planning/STATE.md` state. |
+| `CLAUDE_STATUSLINE_ACCOUNT`   | off     | Set truthy (`1`/`on`) to show the active `claude-swap` / `cswap` account email. Needs claude-swap installed; override its state dir with `CLAUDE_SWAP_DIR`. |
 
 ### Looks — copy the `env` block you want
 
@@ -106,6 +108,15 @@ Thresholds: 🟢 `<50%` · 🟡 `<65%` · 🟠 `<80%` · 💀 `≥80%`.
 ```
 [Opus - high] 📁 my-project | main | v0.2 Account switcher ▰▰▱▱▱ 33% · Phase 01-discuss executing | 🟢 46% | ⚡62%
 ```
+
+**5. With account** — `"env": { "CLAUDE_STATUSLINE_ACCOUNT": "1" }` (requires `claude-swap` / `cswap`):
+
+```
+[Opus - high] 📁 my-project | main | [████░░░░░░] 46% | ⚡62% 👤 you
+```
+
+The account sits in the same zone as the remaining indicator (`⚡62% 👤 you`).
+Only the username (the part before `@`) is shown, never the full email.
 
 > The milestone bar uses 5-cell `▰▱` rectangles — deliberately different from the
 > context bar's 10-cell `[█░]` blocks — so the two never get confused.

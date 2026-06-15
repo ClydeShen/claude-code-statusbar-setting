@@ -293,6 +293,35 @@ function buildGsdSegment(cwd, session) {
   return '';
 }
 
+// --- Optional account segment (claude-swap / cswap) -------------------------
+// Opt-in: only built when CLAUDE_STATUSLINE_ACCOUNT is truthy. Shows the active
+// account email from claude-swap's state file. Override the state directory with
+// CLAUDE_SWAP_DIR. Silent-fail throughout (e.g. claude-swap not installed).
+function accountEnabled() {
+  const v = (process.env.CLAUDE_STATUSLINE_ACCOUNT || '').toLowerCase();
+  return v === '1' || v === 'true' || v === 'on' || v === 'yes';
+}
+
+function buildAccountSegment() {
+  if (!accountEnabled()) return '';
+  try {
+    const dir =
+      process.env.CLAUDE_SWAP_DIR ||
+      path.join(os.homedir(), '.claude-swap-backup');
+    const state = JSON.parse(
+      fs.readFileSync(path.join(dir, 'sequence.json'), 'utf8'),
+    );
+    const acct = state.accounts?.[state.activeAccountNumber];
+    const email = acct?.email;
+    if (!email) return '';
+    // Local part only — don't expose the full email/domain in the status bar.
+    const name = email.split('@')[0];
+    return `\x1b[38;5;170m👤 ${name}\x1b[0m`;
+  } catch (e) {
+    return '';
+  }
+}
+
 function render(data) {
   const model = data.model?.display_name || '?';
   const cwd = data.workspace?.current_dir || data.cwd || process.cwd();
@@ -332,10 +361,16 @@ function render(data) {
     ? `${model} ${C_EFFORT}- ${effort}${C_MODEL}`
     : model;
 
+  const acctSeg = buildAccountSegment();
+
   let out = `${C_MODEL}[${modelInner}]${C_RESET} ${C_DIR}${dirLabel}${C_RESET}`;
   if (branch) out += `${SEP}${C_BRANCH}${branch}${C_RESET}`;
   if (gsdSeg) out += `${SEP}${gsdSeg}`;
-  out += `${SEP}${ctxSeg}${SEP}${C_SEP}${remainSeg}${C_RESET}`;
+  // Remaining + account share the same right-hand zone (space-separated, no
+  // divider): `⚡62% 👤 you`.
+  let rightSeg = `${C_SEP}${remainSeg}${C_RESET}`;
+  if (acctSeg) rightSeg += ` ${acctSeg}`;
+  out += `${SEP}${ctxSeg}${SEP}${rightSeg}`;
   return out;
 }
 

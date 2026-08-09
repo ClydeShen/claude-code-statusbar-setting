@@ -96,7 +96,6 @@ of `~/.claude/settings.json`:
 | ----------------------------- | --------------------- | -------------------------------------------------------------------------------------------- |
 | `CLAUDE_STATUSLINE_MODEL`     | `1`                   | `1` = show the model segment `[Opus 4.8 - medium]`; `0` = hide it (effort hides with it).     |
 | `CLAUDE_STATUSLINE_ASCII_BAR` | `1`                   | `1` = ASCII bar `[████░░] 80%`; `0` = compact emoji form `🟢 80%`.                            |
-| `CLAUDE_STATUSLINE_GSD`       | `0`                   | `1` = add a GSD segment: in-progress todo task, or `.planning/STATE.md` state.               |
 | `CLAUDE_STATUSLINE_ACCOUNT`   | `0`                   | `1` = show the active `claude-swap` / `cswap` account username. Needs claude-swap installed.  |
 | `CLAUDE_SWAP_DIR`             | `~/.claude-swap-backup` | claude-swap state directory read for the account segment (override if yours differs).        |
 
@@ -116,19 +115,7 @@ of `~/.claude/settings.json`:
 
 Thresholds: 🟢 `<50%` · 🟡 `<65%` · 🟠 `<80%` · 💀 `≥80%`.
 
-**3. GSD segment** — `"env": { "CLAUDE_STATUSLINE_GSD": "1" }`
-
-```
-[Opus - high] 📁 my-project | main | v0.2 Account switcher ▰▰▱▱▱ 33% · Phase 01-discuss executing | [████░░░░░░] 46% | ⚡62%
-```
-
-**4. Both** — `"env": { "CLAUDE_STATUSLINE_ASCII_BAR": "0", "CLAUDE_STATUSLINE_GSD": "1" }`
-
-```
-[Opus - high] 📁 my-project | main | v0.2 Account switcher ▰▰▱▱▱ 33% · Phase 01-discuss executing | 🟢 46% | ⚡62%
-```
-
-**5. With account** — `"env": { "CLAUDE_STATUSLINE_ACCOUNT": "1" }` (requires `claude-swap` / `cswap`):
+**3. With account** — `"env": { "CLAUDE_STATUSLINE_ACCOUNT": "1" }` (requires `claude-swap` / `cswap`):
 
 ```
 [Opus - high] 📁 my-project | main | [████░░░░░░] 46% | ⚡62% you
@@ -136,9 +123,6 @@ Thresholds: 🟢 `<50%` · 🟡 `<65%` · 🟠 `<80%` · 💀 `≥80%`.
 
 The account sits in the same zone as the remaining indicator (`⚡62% you`).
 Only the username (the part before `@`) is shown, never the full email.
-
-> The milestone bar uses 5-cell `▰▱` rectangles — deliberately different from the
-> context bar's 10-cell `[█░]` blocks — so the two never get confused.
 
 ### Colours
 

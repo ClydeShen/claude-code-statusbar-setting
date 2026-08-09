@@ -123,183 +123,6 @@ function gitBranch(cwd) {
   }
 }
 
-// --- Optional GSD workflow segment ------------------------------------------
-// Opt-in: only built when CLAUDE_STATUSLINE_GSD is truthy. Surfaces the current
-// in-progress todo task, or the GSD milestone/phase state from .planning/STATE.md.
-// Ported (self-contained) from the GSD-edition statusline so this file stays
-// distributable — no machine-specific paths, silent-fail throughout.
-
-function gsdEnabled() {
-  const v = (process.env.CLAUDE_STATUSLINE_GSD || '').toLowerCase();
-  return v === '1' || v === 'true' || v === 'on' || v === 'yes';
-}
-
-/** Walk up from dir looking for .planning/STATE.md; return parsed state or null. */
-function readGsdState(dir) {
-  const home = os.homedir();
-  let current = dir;
-  for (let i = 0; i < 10; i++) {
-    const candidate = path.join(current, '.planning', 'STATE.md');
-    if (fs.existsSync(candidate)) {
-      try {
-        return parseStateMd(fs.readFileSync(candidate, 'utf8'));
-      } catch (e) {
-        return null;
-      }
-    }
-    const parent = path.dirname(current);
-    if (parent === current || current === home) break;
-    current = parent;
-  }
-  return null;
-}
-
-/** Parse STATE.md frontmatter + Phase line. Returns a partial state object. */
-function parseStateMd(content) {
-  const state = {};
-
-  const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
-  if (fmMatch) {
-    const fm = fmMatch[1];
-    for (const line of fm.split('\n')) {
-      const m = line.match(/^(\w+):\s*(.+)/);
-      if (!m) continue;
-      const [, key, val] = m;
-      const v = val.trim().replace(/^["']|["']$/g, '');
-      if (key === 'status') state.status = v === 'null' ? null : v;
-      if (key === 'milestone') state.milestone = v === 'null' ? null : v;
-      if (key === 'milestone_name') state.milestoneName = v === 'null' ? null : v;
-      if (key === 'active_phase') state.activePhase = (v === 'null' || v === '') ? null : v;
-      if (key === 'next_action') state.nextAction = (v === 'null' || v === '') ? null : v;
-    }
-    const npFlowMatch = fm.match(/^next_phases:\s*\[([^\]]*)\]/m);
-    if (npFlowMatch) {
-      const items = npFlowMatch[1].split(',').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
-      state.nextPhases = items.length > 0 ? items : null;
-    } else {
-      const npBlockMatch = fm.match(/^next_phases:\s*\n((?:[ \t]*-[ \t]*[^\n]+\n?)*)/m);
-      if (npBlockMatch) {
-        const items = npBlockMatch[1]
-          .split('\n')
-          .map(line => line.match(/^[ \t]*-[ \t]*(.+)$/))
-          .filter(Boolean)
-          .map(m => m[1].trim().replace(/^["']|["']$/g, ''))
-          .filter(Boolean);
-        state.nextPhases = items.length > 0 ? items : null;
-      }
-    }
-    const progMatch = fm.match(/^progress:\s*\n((?:[ \t]+\w+:.+\n?)+)/m);
-    if (progMatch) {
-      const cp = progMatch[1].match(/^[ \t]+completed_phases:\s*(\d+)/m);
-      const tp = progMatch[1].match(/^[ \t]+total_phases:\s*(\d+)/m);
-      const pc = progMatch[1].match(/^[ \t]+percent:\s*(\d+)/m);
-      if (cp) state.completedPhases = cp[1];
-      if (tp) state.totalPhases = tp[1];
-      if (pc) state.percent = pc[1];
-    }
-  }
-
-  const phaseMatch = content.match(/^Phase:\s*(\d+)\s+of\s+(\d+)(?:\s+\(([^)]+)\))?/m);
-  if (phaseMatch) {
-    state.phaseNum = phaseMatch[1];
-    state.phaseTotal = phaseMatch[2];
-    state.phaseName = phaseMatch[3] || null;
-  }
-
-  if (!state.status) {
-    const bodyStatus = content.match(/^Status:\s*(.+)/m);
-    if (bodyStatus) {
-      const raw = bodyStatus[1].trim().toLowerCase();
-      if (raw.includes('ready to plan') || raw.includes('planning')) state.status = 'planning';
-      else if (raw.includes('execut')) state.status = 'executing';
-      else if (raw.includes('complet') || raw.includes('archived')) state.status = 'complete';
-    }
-  }
-
-  return state;
-}
-
-/**
- * Render a 5-segment milestone progress bar, or '' when percent is missing.
- * Uses ▰▱ rectangles (not the context bar's █░ blocks) and a shorter 5-cell
- * width so the milestone bar is visually distinct from the context-usage bar
- * when both are shown.
- */
-function renderProgressBar(percent) {
-  if (percent == null || isNaN(percent)) return '';
-  const pct = Math.max(0, Math.min(100, parseInt(percent, 10)));
-  const filled = Math.min(5, Math.round(pct / 20));
-  const bar = '▰'.repeat(filled) + '▱'.repeat(5 - filled);
-  return `${bar} ${pct}%`;
-}
-
-/** Format GSD state into a display string. */
-function formatGsdState(s) {
-  const parts = [];
-
-  if (s.milestone || s.milestoneName) {
-    const ver = s.milestone || '';
-    const name = (s.milestoneName && s.milestoneName !== 'milestone') ? s.milestoneName : '';
-    const bar = renderProgressBar(s.percent);
-    const pieces = [ver, name, bar].filter(Boolean);
-    if (pieces.length > 0) parts.push(pieces.join(' '));
-  }
-
-  const phasesStr = (s.nextPhases && s.nextPhases.length > 0) ? s.nextPhases.join('/') : null;
-
-  if (s.activePhase) {
-    const stage = s.status || '';
-    parts.push(stage ? `Phase ${s.activePhase} ${stage}` : `Phase ${s.activePhase}`);
-  } else if (s.nextAction && phasesStr) {
-    parts.push(`next ${s.nextAction} ${phasesStr}`);
-  } else if (Number(s.percent) === 100 || (s.completedPhases && s.totalPhases && s.completedPhases === s.totalPhases)) {
-    parts.push('milestone complete');
-  } else {
-    if (s.status) parts.push(s.status);
-    if (s.phaseNum && s.phaseTotal) {
-      const phase = s.phaseName
-        ? `${s.phaseName} (${s.phaseNum}/${s.phaseTotal})`
-        : `ph ${s.phaseNum}/${s.phaseTotal}`;
-      parts.push(phase);
-    }
-  }
-
-  return parts.join(' · ');
-}
-
-/** Read the active session's in-progress todo task (activeForm), or ''. */
-function readCurrentTask(session) {
-  if (!session) return '';
-  const claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
-  const todosDir = path.join(claudeDir, 'todos');
-  if (!fs.existsSync(todosDir)) return '';
-  try {
-    const files = fs.readdirSync(todosDir)
-      .filter(f => f.startsWith(session) && f.includes('-agent-') && f.endsWith('.json'))
-      .map(f => ({ name: f, mtime: fs.statSync(path.join(todosDir, f)).mtime }))
-      .sort((a, b) => b.mtime - a.mtime);
-    if (files.length === 0) return '';
-    const todos = JSON.parse(fs.readFileSync(path.join(todosDir, files[0].name), 'utf8'));
-    const inProgress = todos.find(t => t.status === 'in_progress');
-    return inProgress ? (inProgress.activeForm || '') : '';
-  } catch (e) {
-    return '';
-  }
-}
-
-/**
- * Build the opt-in GSD middle segment (with its own ANSI styling), or '' when
- * disabled or no data. Prefers the live todo task, falls back to GSD state.
- */
-function buildGsdSegment(cwd, session) {
-  if (!gsdEnabled()) return '';
-  const task = readCurrentTask(session);
-  if (task) return `\x1b[1m${task}\x1b[0m`; // bold — active work
-  const gsdStateStr = formatGsdState(readGsdState(cwd) || {});
-  if (gsdStateStr) return `\x1b[2m${gsdStateStr}\x1b[0m`; // dim — workflow state
-  return '';
-}
-
 // --- Optional account segment (claude-swap / cswap) -------------------------
 // Opt-in: only built when CLAUDE_STATUSLINE_ACCOUNT is truthy. Shows the active
 // account email from claude-swap's state file. Override the state directory with
@@ -355,7 +178,6 @@ function render(data) {
 
   const branch = gitBranch(cwd);
   const repoUrl = gitRemoteUrl(cwd);
-  const gsdSeg = buildGsdSegment(cwd, session);
 
   // OSC 8 hyperlink: \e]8;;URL\e\\TEXT\e]8;;\e\\
   const dirLabel = repoUrl
@@ -377,7 +199,6 @@ function render(data) {
 
   let out = `${modelLabel}${C_DIR}${dirLabel}${C_RESET}`;
   if (branch) out += `${SEP}${C_BRANCH}${branch}${C_RESET}`;
-  if (gsdSeg) out += `${SEP}${gsdSeg}`;
   // Remaining + account share the same right-hand zone (space-separated, no
   // divider): `⚡62% 👤 you`.
   let rightSeg = `${C_SEP}${remainSeg}${C_RESET}`;
